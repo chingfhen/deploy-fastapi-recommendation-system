@@ -57,6 +57,11 @@ class Query(BaseModel):
 
 app = FastAPI()
 
+@app.route("/")
+def root():
+    return {"recommendations": [0,1,2]}
+
+
 """
 This endpoint makes top_k recommendations for user_id
 user_id - id of user
@@ -68,6 +73,7 @@ async def recommend(query: Query):
     model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=query.top_k, remove_seen=True)
     item_ids = model_output[config["COL_ITEM"]].tolist()
     return {"recommendations": item_ids}
+
 
 
 
