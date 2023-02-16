@@ -15,7 +15,7 @@ services:
         target: /api/models/modcloth-sar
         read_only: true
     deploy:
-      replicas: 3
+      replicas: 1
   # nginx:
   #   build: ./nginx
   #   ports:
@@ -35,3 +35,5 @@ services:
 #   model_params:
 #   model_config:
 #   nginx_config:
+
+
