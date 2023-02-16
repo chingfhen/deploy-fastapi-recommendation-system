@@ -57,9 +57,9 @@ class Query(BaseModel):
 
 app = FastAPI()
 
-@app.route("/")
+@app.get("/")
 def root():
-    return {"recommendations": [0,1,2]}
+    return {"recommendations": [0,1]}
 
 
 """
