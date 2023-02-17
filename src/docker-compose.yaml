@@ -16,22 +16,14 @@ services:
         read_only: true
     deploy:
       replicas: 3
-  # nginx:
-  #   build: ./nginx
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - fastapi
-  #   volumes:
-  #     - type: bind
-  #       source: ./nginx/nginx.conf    # relative to compose file
-  #       target: /etc/nginx/nginx.conf
-  #       read_only: true
-  
-
-
-# i am not generating data from my containers, so i don't need named volumes!
-# volumes: 
-#   model_params:
-#   model_config:
-#   nginx_config:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - fastapi
+    volumes:
+      - type: bind
+        source: ./nginx/nginx.conf    # relative to compose file
+        target: /etc/nginx/nginx.conf
+        read_only: true
