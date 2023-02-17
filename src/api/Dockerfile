@@ -14,7 +14,7 @@ COPY ./fastapi .
 # model parameters last - leverage cache
 # COPY ./models .
 
-CMD ["uvicorn", "recommender_api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "recommender_api:app"]
 
 
 # CMD ["uvicorn", "recommender_api:app", "--host", "0.0.0.0", "--port", "8000"]

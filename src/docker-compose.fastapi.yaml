@@ -1,0 +1,27 @@
+services:
+  fastapi:
+    build: ./api
+    volumes:
+      # bind mount
+      - type: bind
+        source: ./api/models/sar.yml
+        target: /api/models/sar.yml
+        read_only: true
+      - type: bind
+        source: ./api/models/modcloth-sar
+        target: /api/models/modcloth-sar
+        read_only: true
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.app.loadbalancer.server.port=80
+      - traefik.http.routers.app-http.entrypoints=http
+      - traefik.http.routers.app-http.rule=Host(`dsaichingfhen.com`)
+      - traefik.docker.network=traefik-public
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+
+networks:
+  traefik-public:
+    external: true 
