@@ -28,3 +28,7 @@ services:
         source: ./nginx/nginx.conf    # relative to compose file
         target: /etc/nginx/nginx.conf
         read_only: true
+      - type: bind
+        source: /etc/letsencrypt/live/dsaichingfhen.com   # relative to compose file
+        target: /etc/letsencrypt/live/dsaichingfhen.com
+        read_only: true 
