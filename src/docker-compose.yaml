@@ -15,7 +15,7 @@ services:
         target: /api/models/modcloth-sar
         read_only: true
       - type: bind
-        source: /etc/letsencrypt/live/dsaichingfhen.com   # relative to compose file
+        source: /etc/letsencrypt/archive/dsaichingfhen.com   # relative to compose file
         target: /ssl
         read_only: true 
     deploy:
