@@ -14,6 +14,10 @@ services:
         source: ./api/models/modcloth-sar
         target: /api/models/modcloth-sar
         read_only: true
+      - type: bind
+        source: /etc/letsencrypt/live/dsaichingfhen.com   # relative to compose file
+        target: /ssl
+        read_only: true 
     deploy:
       replicas: 3
   nginx:
