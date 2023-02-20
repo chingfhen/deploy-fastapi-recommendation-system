@@ -30,5 +30,5 @@ services:
         read_only: true
       - type: bind
         source: /etc/letsencrypt/live/dsaichingfhen.com   # relative to compose file
-        target: /etc/letsencrypt/live/dsaichingfhen.com
+        target: /ssl
         read_only: true 
