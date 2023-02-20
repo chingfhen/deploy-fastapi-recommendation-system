@@ -33,6 +33,6 @@ services:
         target: /etc/nginx/nginx.conf
         read_only: true
       - type: bind
-        source: /etc/letsencrypt/live/dsaichingfhen.com   # relative to compose file
+        source: /etc/letsencrypt/archive/dsaichingfhen.com   
         target: /ssl
         read_only: true 
