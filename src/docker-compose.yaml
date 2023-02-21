@@ -11,14 +11,6 @@ services:
         source: ./api/models
         target: /api/models
         read_only: true
-      # - type: bind
-      #   source: ./api/models/sar.yml
-      #   target: /api/models/sar.yml
-      #   read_only: true
-      # - type: bind
-      #   source: ./api/models/modcloth-sar
-      #   target: /api/models/modcloth-sar
-      #   read_only: true
     deploy:
       replicas: 3
   nginx:
@@ -36,7 +28,7 @@ services:
         read_only: true
       - type: bind
         # absolute path to the ssl folder in the host machine
-        source: /etc/letsencrypt/archive/dsaichingfhen.com 
+        source: /etc/letsencrypt/live/dsaichingfhen.com 
         # absolute path inside the container   
         target: /ssl
         read_only: true 
