@@ -3,26 +3,28 @@ services:
   fastapi:
     build: ./api
     ports:
+      # all replicas listen at port 8000 - the host port isn't defined, i think is automatically defined then detected by nginx
       - "8000"
     volumes:
       # bind mount
       - type: bind
-        source: ./api/models/sar.yml
-        target: /api/models/sar.yml
+        source: ./api/models
+        target: /api/models
         read_only: true
-      - type: bind
-        source: ./api/models/modcloth-sar
-        target: /api/models/modcloth-sar
-        read_only: true
-      - type: bind
-        source: /etc/letsencrypt/archive/dsaichingfhen.com   # relative to compose file
-        target: /ssl
-        read_only: true 
+      # - type: bind
+      #   source: ./api/models/sar.yml
+      #   target: /api/models/sar.yml
+      #   read_only: true
+      # - type: bind
+      #   source: ./api/models/modcloth-sar
+      #   target: /api/models/modcloth-sar
+      #   read_only: true
     deploy:
       replicas: 3
   nginx:
     build: ./nginx
     ports:
+      # nginx listens at port 80 and 443 for http and https messages
       - "80:80"
       - "443:443"
     depends_on:
@@ -33,6 +35,8 @@ services:
         target: /etc/nginx/nginx.conf
         read_only: true
       - type: bind
-        source: /etc/letsencrypt/archive/dsaichingfhen.com   
+        # absolute path to the ssl folder in the host machine
+        source: /etc/letsencrypt/archive/dsaichingfhen.com 
+        # absolute path inside the container   
         target: /ssl
         read_only: true 
