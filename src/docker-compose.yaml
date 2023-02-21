@@ -21,7 +21,7 @@ services:
         # absolute path to the ssl folder in the host machine
         source: /etc/letsencrypt/live/dsaichingfhen.com 
         # absolute path inside the container   
-        target: /ssl
+        target: /etc/letsencrypt/live/dsaichingfhen.com 
         read_only: true 
     deploy:
       replicas: 3
@@ -49,5 +49,5 @@ services:
         # absolute path to the ssl folder in the host machine
         source: /etc/letsencrypt/live/dsaichingfhen.com 
         # absolute path inside the container   
-        target: /ssl
+        target: /etc/letsencrypt/live/dsaichingfhen.com 
         read_only: true 
