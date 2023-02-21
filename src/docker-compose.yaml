@@ -11,7 +11,18 @@ services:
         source: ./api/models
         target: /api/models
         read_only: true
-
+      - type: bind
+        # absolute path to the ssl folder in the host machine
+        source: /etc/letsencrypt/live/dsaichingfhen.com 
+        # absolute path inside the container   
+        target: /ssl
+        read_only: true 
+      - type: bind
+        # absolute path to the ssl folder in the host machine
+        source: /etc/letsencrypt/archive/dsaichingfhen.com 
+        # absolute path inside the container   
+        target: /ssl2
+        read_only: true 
     deploy:
       replicas: 3
     
@@ -27,4 +38,8 @@ services:
       - type: bind
         source: ./nginx/nginx.conf    # relative to compose file
         target: /etc/nginx/nginx.conf
+        read_only: true
+      - type: bind
+        source: $(readlink -f /etc/letsencrypt/live/dsaichingfhen.com)
+        target: /etc/letsencrypt/live/dsaichingfhen.com
         read_only: true
