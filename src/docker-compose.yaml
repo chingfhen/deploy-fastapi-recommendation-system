@@ -3,37 +3,36 @@ services:
   fastapi:
     build: ./api
     ports:
+      # all replicas listen at port 8000 - the host port isn't defined, i think is automatically defined then detected by nginx
       - "8000"
     volumes:
       # bind mount
       - type: bind
-        source: ./api/models/sar.yml
-        target: /api/models/sar.yml
-        read_only: true
-      - type: bind
-        source: ./api/models/modcloth-sar
-        target: /api/models/modcloth-sar
+        source: ./api/models
+        target: /api/models
         read_only: true
     deploy:
-      replicas: 1
-  # nginx:
-  #   build: ./nginx
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - fastapi
-  #   volumes:
-  #     - type: bind
-  #       source: ./nginx/nginx.conf    # relative to compose file
-  #       target: /etc/nginx/nginx.conf
-  #       read_only: true
-  
-
-
-# i am not generating data from my containers, so i don't need named volumes!
-# volumes: 
-#   model_params:
-#   model_config:
-#   nginx_config:
-
-
+      replicas: 3
+    
+  nginx:
+    build: ./nginx
+    ports:
+      # nginx listens at port 80 and 443 for http and https messages
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - fastapi
+    volumes:
+      - type: bind
+        source: ./nginx/nginx.conf    # relative to compose file
+        target: /etc/nginx/nginx.conf
+        read_only: true
+        # both the live and archive are mounted - live directory contains symbolic links to the parent "archive" - no code change needed after ssl renewal
+      - type: bind
+        source: /etc/letsencrypt/archive/dsaichingfhen.com 
+        target: /etc/letsencrypt/archive/dsaichingfhen.com 
+        read_only: true 
+      - type: bind
+        source: /etc/letsencrypt/live/dsaichingfhen.com 
+        target: /etc/letsencrypt/live/dsaichingfhen.com 
+        read_only: true 
