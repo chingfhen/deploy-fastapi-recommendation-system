@@ -1,7 +1,0 @@
-# THESE ARE CONFIGURATIONS FOR THE RECOMMENDER ALGORITHM: SAR
-COL_USER: user_id  
-COL_ITEM: item_id
-COL_RATING: rating    
-SIMILARITY_TYPE: jaccard           # similarity between the item and user embeddings
-TOP_K: 10                          # number of items to recommend when called 
-MODEL_DIR: /api/models/modcloth-sar              # where the model parameters are saved

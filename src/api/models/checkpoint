@@ -1,0 +1,2 @@
+model_checkpoint_path: "C:\\Users\\tanch\\Documents\\NTU\\NTU Year 4\\FYP - GNN\\Recommender API\\deploy-fastapi-recommendation-system\\src\\api\\models\\epoch_50"
+all_model_checkpoint_paths: "C:\\Users\\tanch\\Documents\\NTU\\NTU Year 4\\FYP - GNN\\Recommender API\\deploy-fastapi-recommendation-system\\src\\api\\models\\epoch_50"
