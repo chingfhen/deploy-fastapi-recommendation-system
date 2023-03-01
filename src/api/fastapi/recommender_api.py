@@ -1,105 +1,124 @@
 
-# uvicorn recommender_api:app --host 0.0.0.0 --port 80 --reload
 
-from recommenders.models.sar import SAR
-# from recommenders.evaluation.python_evaluation import precision_at_k
 import pandas as pd
-import os
-from scipy.sparse import save_npz, load_npz
-from numpy import save, load 
 import json
-import yaml
-
 from fastapi import FastAPI
 from pydantic import BaseModel
-from manychat import manychat_recommender
-from  model_utils import *
+import yaml
+import os
+from db import database_config, database_connection, database_cursor, get_product_info
+from model import model_config, model
 
-# load the general model configurations
-with open("/api/models/model-config.yml", "r") as f:
+
+# load config
+config = {}
+config.update(database_config)
+config.update(model_config)
+
+
+local_path = r"C:\Users\tanch\Documents\NTU\NTU Year 4\FYP - GNN\Recommender API\deploy-fastapi-recommendation-system\src\config\seller-config.yaml"
+volume_path = "/config/seller-config.yaml"
+config_path = local_path if os.path.exists(local_path) else volume_path
+with open(config_path, "r") as f:
     try:
-        config = yaml.safe_load(f)
+        config.update(yaml.safe_load(f))
     except yaml.YAMLError as exc:
         print(exc)
-
-# check if the model is supported
-if config["MODEL_TYPE"] not in ["lightgcn","sar"]:
-    raise ValueError("'MODEL' not recognized")
-    
-
-# load the specific model configurations
-if config["MODEL_TYPE"]=="sar":
-    model_config_path = "/api/models/sar-config.yml"
-elif config["MODEL_TYPE"]=="lightgcn":
-    model_config_path = "/api/models/lightgcn-config.yml"
-with open(model_config_path, "r") as f:
-    try:
-        tmp_config = yaml.safe_load(f)
-    except yaml.YAMLError as exc:
-        print(exc)
-config.update(tmp_config)
-
-# load the specific model
-if config["MODEL_TYPE"]=="sar":
-    model = SAR(
-        col_user=config['COL_USER'],
-        col_item=config['COL_ITEM'],
-        col_rating=config['COL_RATING'],
-        similarity_type=config['SIMILARITY_TYPE'], 
-        time_decay_coefficient=30, 
-        timedecay_formula=False,
-        normalize=False
-    )
-    sar_load(model, config['MODEL_DIR'])
-
-elif config["MODEL_TYPE"]=="lightgcn":
-    raise ValueError("Oops Something went Wrong!")
-    hparams = prepare_hparams(yaml_file,
-                              n_layers=2,
-                              loss_type = loss_type, 
-                              loss_neg_weight = loss_neg_weight, 
-                              log_wandb = log_wandb,
-                              batch_size=BATCH_SIZE,
-                              epochs=50,
-                              learning_rate=0.01,
-                              eval_epoch=1,
-                              top_k=TOP_K,
-                              COL_USER = USER_ID_COL,
-                              COL_ITEM = ITEM_ID_COL,
-                              COL_RATING = RATING_COL,
-                              save_model = save_model,
-                            save_epoch = save_epoch,
-                            MODEL_DIR = MODEL_DIR
-                              )
-    # initiate model
-    model = LightGCN(hparams, data, seed=SEED)
-    model.load(config['MODEL_DIR'])
-
-
 
 """
-The following class defines the arguments for the "recommend" endpoint
+Input for "recommend" endpoint
 """
 class Query(BaseModel):
     user_id: str
     top_k: int
-    
-
-app = FastAPI()
 
 """
-This endpoint makes top_k recommendations for user_id
-user_id - id of user
-top_k - number of recommendations to make
+FASTAPI
+"""
+app = FastAPI()
+"""
+Standard Recommendation
+Input: Query
+Output: {"recommendations": [item123,item321]}
 """
 # @app.post("/recommend")
 @app.post("/recommend")
 async def recommend(query: Query):
-    model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=query.top_k, remove_seen=True)
+    model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=min(query.top_k, config["TOP_K"]), remove_seen=True)
     item_ids = model_output[config["COL_ITEM"]].tolist()
     return {"recommendations": item_ids}
+"""
+ManyChat Response
+Input: Query
+Output: 
+    - 1 item recommendation
+    - item details e.g. title, product url, image url
+"""
+@app.post("/manychat/recommend")
+async def manychat_recommend(query: Query):
+    # make recommendation
+    model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=min(query.top_k, 1), remove_seen=True)
+    item_ids = model_output[config["COL_ITEM"]].tolist()  
+    item_id = int(item_ids[0])
+
+    # retrieve product info
+    print(item_id, type(item_id))
+    product_id, product_name, categories, image_url = get_product_info(database_cursor, item_id)
+    product_url = f"https://shopee.sg/product/{config['SELLER_ID']}/{product_id}"
+
+    
+    return {
+        "version": "v2",
+        "content": {
+            "messages": [
+                {
+                    "type": "image",
+                    "url": image_url,
+                    "buttons": [
+                        {
+                            "type": "url",
+                            "caption": "Product Link",
+                            "url": product_url,
+                            "webview_size": "full"
+                        },
+                        {
+                            "type": "url",
+                            "caption": config['SHOP_NAME'],
+                            "url": config['SHOP_URL'],
+                            "webview_size": "full"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "text": product_name
+                }
+                ],
+            "actions": [],
+            "quick_replies": []
+        }
+    }
+
+if __name__=="__main__":
+    # product_id, product_name, categories, image_url = get_product_info(database_cursor, 23821143235)
+    # print(product_id, product_name, categories, image_url )
+    print("recommender_apy.py done")
 
 
-app.include_router(manychat_recommender.manychat_router)
+
+# read environment variables
+# DATABASE_FOLDER = os.environ.get('DATABASE_FOLDER')
+# DATABASE_NAME = os.environ.get('DATABASE_NAME')
+
+# # establish database connection
+# database_connection = sqlite3.connect(f"{DATABASE_DIR}/{DATABASE_NAME}.db" if DATABASE_FOLDER is not None else "/database/sqlite3/arietes_product_info.db")
+# database_cursor = database_connection.cursor()
+
+# manychat endpoints
+# manychat_router = APIRouter()
+# app.include_router(manychat_recommender.manychat_router)
+
+
+
 
 
