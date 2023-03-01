@@ -29,11 +29,11 @@ if model_config["MODEL_TYPE"] not in model_config["MODEL_SUPPORTED_TYPES"]:
     
 # load specific model configurations
 if model_config["MODEL_TYPE"]=="sar":
-    local_path = r"C:\Users\tanch\Documents\NTU\NTU Year 4\FYP - GNN\Recommender API\deploy-fastapi-recommendation-system\src\config\sar-config.yml"
+    local_path = r"C:\Users\tanch\Documents\NTU\NTU Year 4\FYP - GNN\Recommender API\deploy-fastapi-recommendation-system\src\config\sar-config.yaml"
     volume_path = "/config/sar-config.yaml"
     config_path = local_path if os.path.exists(local_path) else volume_path
 elif model_config["MODEL_TYPE"]=="lightgcn":
-    local_path = r"C:\Users\tanch\Documents\NTU\NTU Year 4\FYP - GNN\Recommender API\deploy-fastapi-recommendation-system\src\config\lightgcn-config.yml"
+    local_path = r"C:\Users\tanch\Documents\NTU\NTU Year 4\FYP - GNN\Recommender API\deploy-fastapi-recommendation-system\src\config\lightgcn-config.yaml"
     volume_path = "/config/lightgcn-config.yaml"
     config_path = local_path if os.path.exists(local_path) else volume_path
 with open(config_path, "r") as f:
