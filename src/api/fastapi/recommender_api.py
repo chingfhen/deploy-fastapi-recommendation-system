@@ -70,11 +70,11 @@ async def manychat_recommend(query: Query):
     return {
         "version": "v2",
         "content": {
-            "type":"telegram"
+            "type":"telegram",
             "messages": [
                 {
                     "type": "image",
-                    "url": image_url,
+                    "url": "https://storage.googleapis.com/seller123/123373", # image_url,
                     "buttons": [
                         {
                             "type": "url",
