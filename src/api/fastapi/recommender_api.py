@@ -74,28 +74,28 @@ async def manychat_recommend(query: Query):
                 {
                     "type": "image",
                     "url": image_url,
-                    "buttons": [
-                        {
-                            "type": "url",
-                            "caption": "Product Link",
-                            "url": product_url,
-                            "webview_size": "full"
-                        },
-                        {
-                            "type": "url",
-                            "caption": config['SHOP_NAME'],
-                            "url": config['SHOP_URL'],
-                            "webview_size": "full"
-                        }
-                    ]
+                    # "buttons": [
+                    #     {
+                    #         "type": "url",
+                    #         "caption": "Product Link",
+                    #         "url": product_url,
+                    #         "webview_size": "full"
+                    #     },
+                    #     {
+                    #         "type": "url",
+                    #         "caption": config['SHOP_NAME'],
+                    #         "url": config['SHOP_URL'],
+                    #         "webview_size": "full"
+                    #     }
+                    # ]
                 },
-                {
-                    "type": "text",
-                    "text": product_name
-                }
+                # {
+                #     "type": "text",
+                #     "text": product_name
+                # }
                 ],
-            "actions": [],
-            "quick_replies": []
+            # "actions": [],
+            # "quick_replies": []
         }
     }
 
