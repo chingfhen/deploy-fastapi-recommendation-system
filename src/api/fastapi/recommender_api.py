@@ -3,11 +3,13 @@
 import pandas as pd
 import json
 from fastapi import FastAPI
-from pydantic import BaseModel
 import yaml
 import os
 from db import database_config, database_connection, database_cursor, get_product_info
 from model import model_config, model
+from classes import Query, Product
+from telegram_bot_messages import send_recommendation
+
 
 
 # load config
@@ -25,12 +27,7 @@ with open(config_path, "r") as f:
     except yaml.YAMLError as exc:
         print(exc)
 
-"""
-Input for "recommend" endpoint
-"""
-class Query(BaseModel):
-    user_id: str
-    top_k: int
+
 
 """
 FASTAPI
@@ -62,38 +59,37 @@ async def manychat_recommend(query: Query):
     item_id = int(item_ids[0])
 
     # retrieve product info
-    print(item_id, type(item_id))
-    product_id, product_name, categories, image_url = get_product_info(database_cursor, item_id)
-    product_url = f"https://shopee.sg/product/{config['SELLER_ID']}/{product_id}"
+    product = get_product_info(database_cursor, item_id)    
 
+    send_recommendation(query.chat_id, product)
     
     return {
         "version": "v2",
         "content": {
             "type":"telegram",
             "messages": [
-                {
-                    "type": "image",
-                    "url": "https://storage.googleapis.com/seller123/123373", # image_url,
-                    "buttons": [
-                        {
-                            "type": "url",
-                            "caption": "Product Link",
-                            "url": product_url,
-                            "webview_size": "full"
-                        },
-                        {
-                            "type": "url",
-                            "caption": config['SHOP_NAME'],
-                            "url": config['SHOP_URL'],
-                            "webview_size": "full"
-                        }
-                    ]
-                },
-                {
-                    "type": "text",
-                    "text": product_name
-                }
+                # {
+                #     "type": "image",
+                #     "url": image_url,
+                #     "buttons": [
+                #         {
+                #             "type": "url",
+                #             "caption": "Product Link",
+                #             "url": product_url,
+                #             "webview_size": "full"
+                #         },
+                #         {
+                #             "type": "url",
+                #             "caption": config['SHOP_NAME'],
+                #             "url": config['SHOP_URL'],
+                #             "webview_size": "full"
+                #         }
+                #     ]
+                # },
+                # {
+                #     "type": "text",
+                #     "text": product_name
+                # }
                 ],
             # "actions": [],
             # "quick_replies": []
@@ -103,7 +99,7 @@ async def manychat_recommend(query: Query):
 if __name__=="__main__":
     # product_id, product_name, categories, image_url = get_product_info(database_cursor, 23821143235)
     # print(product_id, product_name, categories, image_url )
-    print("recommender_apy.py done")
+    print("Done")
 
 
 

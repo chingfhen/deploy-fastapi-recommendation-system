@@ -1,6 +1,7 @@
 import mysql.connector
 import os
 import yaml
+from classes import Product
 
 # load configurations
 local_path = r"C:\Users\tanch\Documents\NTU\NTU Year 4\FYP - GNN\Recommender API\deploy-fastapi-recommendation-system\src\config\database-config.yaml"
@@ -25,12 +26,13 @@ Get info of 1 item
 """
 def get_product_info(cur, item_id):
     cur.execute(f"select * from {database_config['TABLE_NAME']} where product_id={item_id};")
-    return next(cur)
+    item = next(cur)
+    return Product(product_id = item[0], product_name = item[1], categories = item[2], image_url = item[3])
 
 if __name__ == "__main__":
     # product_id, product_name, categories, image_url = get_product_info(database_cursor, 23821143235)
     # print(product_id, product_name, categories, image_url )
-    print("db.py done")
+    print("Done")
 
 
 # cnx.close()

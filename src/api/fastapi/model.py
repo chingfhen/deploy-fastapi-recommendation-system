@@ -81,5 +81,5 @@ elif model_config["MODEL_TYPE"]=="lightgcn":
     model.load(model_config['MODEL_DIR'])
 
 if __name__ == "__main__":
-    print("model.py done")
+    print("Done")
     
