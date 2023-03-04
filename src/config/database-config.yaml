@@ -1,0 +1,5 @@
+DATABASE_USER: "ching"
+DATABASE_PASSWORD: "978775!Rtj01"
+DATABASE_HOST: "fyp-transactional-data.cvud8aipwv4k.ap-northeast-1.rds.amazonaws.com"
+DATABASE_NAME: "fyp_transaction_data"
+TABLE_NAME: "arietes_product_info"

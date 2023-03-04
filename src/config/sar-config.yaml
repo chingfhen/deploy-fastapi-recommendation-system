@@ -1,0 +1,6 @@
+# CONFIGURATIONS THIS PARTICULAR ALGORITHM
+COL_USER: user_id  
+COL_ITEM: item_id
+COL_RATING: rating    
+SIMILARITY_TYPE: jaccard           # similarity between the item and user embeddings
+MODEL_DIR: /api/models/arietes-sar              # where the model parameters are saved

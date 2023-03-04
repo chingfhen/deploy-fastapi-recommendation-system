@@ -1,150 +1,121 @@
 
-# uvicorn recommender_api:app --host 0.0.0.0 --port 80 --reload
 
-from recommenders.models.sar import SAR
-# from recommenders.evaluation.python_evaluation import precision_at_k
 import pandas as pd
-import os
-from scipy.sparse import save_npz, load_npz
-from numpy import save, load 
 import json
-import yaml
-
 from fastapi import FastAPI
-from pydantic import BaseModel
+import yaml
+import os
+from db import database_config, database_connection, database_cursor, get_product_info
+from model import model_config, model
+from classes import Query, Product
+from telegram_bot_messages import send_recommendation
 
-# read the configurations for the recommender algorithm
-with open("/api/models/sar.yml", "r") as f:
+
+
+# load config
+config = {}
+config.update(database_config)
+config.update(model_config)
+
+
+local_path = r"C:\Users\tanch\Documents\NTU\NTU Year 4\FYP - GNN\Recommender API\deploy-fastapi-recommendation-system\src\config\seller-config.yaml"
+volume_path = "/config/seller-config.yaml"
+config_path = local_path if os.path.exists(local_path) else volume_path
+with open(config_path, "r") as f:
     try:
-        config = yaml.safe_load(f)
+        config.update(yaml.safe_load(f))
     except yaml.YAMLError as exc:
         print(exc)
 
-"""
-The following function loads the trained SAR model
-    args:
-        model - SAR model instance from the recommenders library
-        directory - directory containing the trained model parameters
-"""
-def sar_load(model, directory):
-    model.user_affinity = load_npz(file = os.path.join(directory,"sar_user_affinity.npz"))
-    model.item_similarity = load(file = os.path.join(directory,"sar_item_similarity.npy"))
-    with open(os.path.join(directory,"sar_index2item.json"), "r") as f:
-        tmp_dict =  json.load(f)
-        model.index2item = {int(k):v for k,v in tmp_dict.items()}
-    with open(os.path.join(directory,"sar_user2index.json"), "r") as f:
-        model.user2index = json.load(f)
-        
-# load the trained SAR model
-model = SAR(
-    col_user=config['COL_USER'],
-    col_item=config['COL_ITEM'],
-    col_rating=config['COL_RATING'],
-    similarity_type=config['SIMILARITY_TYPE'], 
-    time_decay_coefficient=30, 
-    timedecay_formula=False,
-    normalize=False
-)
-sar_load(model, config['MODEL_DIR'])
+
 
 """
-The following class defines the arguments for the "recommend" endpoint
+FASTAPI
 """
-class Query(BaseModel):
-    user_id: str
-    top_k: int
-    
-
 app = FastAPI()
-
-@app.get("/")
-def root():
-    return {"recommendations": [0,1]}
-
-
 """
-This endpoint makes top_k recommendations for user_id
-user_id - id of user
-top_k - number of recommendations to make
+Standard Recommendation
+Input: Query
+Output: {"recommendations": [item123,item321]}
 """
 # @app.post("/recommend")
 @app.post("/recommend")
 async def recommend(query: Query):
-    model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=query.top_k, remove_seen=True)
+    model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=min(query.top_k, config["TOP_K"]), remove_seen=True)
     item_ids = model_output[config["COL_ITEM"]].tolist()
     return {"recommendations": item_ids}
+"""
+ManyChat Response
+Input: Query
+Output: 
+    - 1 item recommendation
+    - item details e.g. title, product url, image url
+"""
+@app.post("/manychat/recommend")
+async def manychat_recommend(query: Query):
+    # make recommendation
+    model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=min(query.top_k, 1), remove_seen=True)
+    item_ids = model_output[config["COL_ITEM"]].tolist()  
+    item_id = int(item_ids[0])
 
+    # retrieve product info
+    product = get_product_info(database_cursor, item_id)    
 
-
-
-
-
-# from recommenders.datasets.python_splitters import python_stratified_split
-# from recommenders.utils.constants import SEED as DEFAULT_SEED
-# from recommenders.evaluation.python_evaluation import precision_at_k
-# from recommenders.models.deeprec.DataModel.ImplicitCF import ImplicitCF
-# from recommenders.models.deeprec.deeprec_utils import prepare_hparams
-# from recommenders.models.deeprec.models.graphrec.lightgcn import LightGCN
-# from recommenders.utils.timer import Timer
-
-# import pandas as pd
-# import os
-# from fastapi import FastAPI
-# from pydantic import BaseModel
-
-
-# train_path = "./data/train.pkl"
-# test_path = "./data/test.pkl"
-# yaml_file = "./models/lightgcn.yml"
-# train = pd.read_pickle(train_path)
-# test = pd.read_pickle(test_path)
-
-# COL_USER, COL_ITEM, COL_RATING = "user_id", "item_id", "rating"
-# SEED = 0 
-# TOP_K = 10
-# BATCH_SIZE = 1024
-# loss_type = "AmpBPR2"
-# loss_neg_weight = 1.5
-# log_wandb = False
-
-# data = ImplicitCF(train = train, test=test, 
-#                   adj_dir=None, 
-#                   col_user=COL_USER, col_item=COL_ITEM, 
-#                   col_rating = COL_RATING,
-#                   seed=SEED)
-
-# # for i in range(3):
-# hparams = prepare_hparams(yaml_file,
-#                               n_layers=2,
-#                               loss_type = loss_type, 
-#                               loss_neg_weight = loss_neg_weight, 
-#                               log_wandb = log_wandb,
-#                               batch_size=BATCH_SIZE,
-#                               epochs=50,
-#                               learning_rate=0.005,
-#                               eval_epoch=1,
-#                               top_k=TOP_K,
-#                               COL_USER = COL_USER,
-#                               COL_ITEM = COL_ITEM,
-#                               COL_RATING = COL_RATING,
-
-#                               )
-# # initiate model
-# model = LightGCN(hparams, data, seed=SEED)
+    send_recommendation(query.chat_id, product)
     
+    return {
+        "version": "v2",
+        "content": {
+            "type":"telegram",
+            "messages": [
+                # {
+                #     "type": "image",
+                #     "url": image_url,
+                #     "buttons": [
+                #         {
+                #             "type": "url",
+                #             "caption": "Product Link",
+                #             "url": product_url,
+                #             "webview_size": "full"
+                #         },
+                #         {
+                #             "type": "url",
+                #             "caption": config['SHOP_NAME'],
+                #             "url": config['SHOP_URL'],
+                #             "webview_size": "full"
+                #         }
+                #     ]
+                # },
+                # {
+                #     "type": "text",
+                #     "text": product_name
+                # }
+                ],
+            # "actions": [],
+            # "quick_replies": []
+        }
+    }
 
-# class Query(BaseModel):
-#     user_id: str
-#     top_k: int
-    
-
-# app = FastAPI()
+if __name__=="__main__":
+    # product_id, product_name, categories, image_url = get_product_info(database_cursor, 23821143235)
+    # print(product_id, product_name, categories, image_url )
+    print("Done")
 
 
-# @app.post("/recommend")
-# async def recommend(query: Query):
-#     model_output = model.recommend_k_items(pd.DataFrame({"user_id":[query.user_id]}), top_k=query.top_k, remove_seen=True)
-#     item_ids = model_output[COL_ITEM].tolist()
-#     return {"recommendations": item_ids}
+
+# read environment variables
+# DATABASE_FOLDER = os.environ.get('DATABASE_FOLDER')
+# DATABASE_NAME = os.environ.get('DATABASE_NAME')
+
+# # establish database connection
+# database_connection = sqlite3.connect(f"{DATABASE_DIR}/{DATABASE_NAME}.db" if DATABASE_FOLDER is not None else "/database/sqlite3/arietes_product_info.db")
+# database_cursor = database_connection.cursor()
+
+# manychat endpoints
+# manychat_router = APIRouter()
+# app.include_router(manychat_recommender.manychat_router)
+
+
+
 
 

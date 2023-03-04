@@ -1,0 +1,6 @@
+# GENERAL RECOMMENDER MODEL CONFIGURATIONS
+MODEL_TYPE: "sar"                    # Options: lightgcn, sar
+TOP_K: 10                           # number of items to recommend when called 
+MODEL_SUPPORTED_TYPES:
+  - "sar"
+  - "lightgcn"
