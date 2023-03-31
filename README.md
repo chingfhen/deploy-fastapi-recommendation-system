@@ -6,3 +6,5 @@
 • Utilized cloud databases such as Google Cloud and AWS RDS for storing product information and images
 
 Watch the demo [here](https://clipchamp.com/watch/uC86E6g13D0)
+
+Note: project is still ongoing as of April 2023, but has moved to another repository
